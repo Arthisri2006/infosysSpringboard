@@ -1,0 +1,2 @@
+"""Retrieval-augmented evidence pipeline."""
+

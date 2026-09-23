@@ -1,0 +1,14 @@
+fastapi==0.115.9
+uvicorn[standard]==0.34.2
+pydantic==2.11.4
+pydantic-settings==2.9.1
+datasets==3.6.0
+sentence-transformers==4.1.0
+chromadb==1.0.9
+# Chroma 1.0.x uses the pre-6 PostHog capture signature even when telemetry is disabled.
+posthog==5.4.0
+pandas==2.2.3
+numpy==2.2.5
+python-dotenv==1.1.0
+pytest==8.3.5
+httpx==0.28.1
