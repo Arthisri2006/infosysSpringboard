@@ -152,31 +152,21 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Netlify Deployment
+## Render Deployment
 
-The root `netlify.toml` deploys the Next.js application from `frontend/` using Node.js 22. When the GitHub repository is linked, the file supplies these settings:
+The root [`render.yaml`](render.yaml) deploys the complete application on Render as two connected services:
 
-- Base directory: `frontend`
-- Build command: `npm run build`
-- Publish directory: `out`
+- `evidence-lab-api`: a FastAPI web service that installs the RAG dependencies, builds a development-size SQuAD/TruthfulQA Chroma index, starts Uvicorn, and exposes `/health`.
+- `evidence-lab`: a Next.js static site built from `frontend/` and published from `frontend/out`.
 
-The frontend uses Next.js static export mode, so the production build creates `frontend/out/index.html` and deployable assets. This avoids publishing the internal `.next` build directory directly, which can produce a Netlify “Page not found” response when no Next.js runtime adapter is active.
+The Blueprint wires the generated service URLs automatically. `NEXT_PUBLIC_API_URL` points the frontend to the backend, while `FRONTEND_ORIGIN` permits browser requests from the Render frontend. No manual production URL is required.
 
-Python is pinned to 3.11 through `.python-version` and `PYTHON_VERSION` to prevent build images from selecting Python 3.14, which can force `pydantic-core` to compile from source. A correct Netlify frontend build does not install `requirements.txt`; the pin is a safe fallback for repository tooling.
+1. In Render, create a new Blueprint from this GitHub repository.
+2. Apply the `render.yaml` Blueprint.
+3. Wait for both services to finish building and for the API health check to pass.
+4. Open the `evidence-lab` static-site URL.
 
-The FastAPI, Sentence Transformers, and persistent ChromaDB backend is not deployed by Netlify. Deploy the backend to a persistent Python or container host, set `NEXT_PUBLIC_API_URL` in Netlify to that public HTTPS URL, and trigger a new frontend deployment. `http://127.0.0.1:8000` works only for local development and must not be used in production.
-
-### Render Backend Deployment
-
-The root [`render.yaml`](render.yaml) defines a Render FastAPI web service. It installs the backend dependencies, creates a development-size SQuAD/TruthfulQA Chroma index during the build, starts Uvicorn on Render's assigned port, and uses `/health` for deployment health checks.
-
-1. In Render, create a new Blueprint and connect this GitHub repository.
-2. Apply the `render.yaml` Blueprint and wait for the service health check to pass.
-3. Copy the generated HTTPS service URL, such as `https://evidence-lab-api.onrender.com`.
-4. In Netlify, set `NEXT_PUBLIC_API_URL` to that URL without a trailing slash.
-5. Trigger a new Netlify deployment so the public API URL is embedded in the static frontend.
-
-The Blueprint trusts the production Netlify origin and its deploy-preview subdomains. Render's free web service is suitable for demonstration but sleeps after inactivity and uses an ephemeral filesystem; dashboard records can therefore be lost on restart. Use a paid persistent disk or an external database for durable production history.
+Python is pinned to 3.11 to ensure binary wheels are available for the backend dependencies. The frontend uses Next.js static export mode. Render's free web service is suitable for demonstration but sleeps after inactivity and uses an ephemeral filesystem; dashboard records can therefore be lost on restart. Use a paid persistent disk or an external database for durable production history.
 
 ## Dataset Ingestion and Vector Index
 
@@ -276,7 +266,7 @@ Presentation previews and screenshots are generated locally for review before an
 - The local judge agents use MiniLM similarity and transparent rules, not a paid external LLM or human fact checker.
 - Claim splitting is sentence-level, and contradiction rules are conservative rather than full natural-language inference.
 - Batch processing is synchronous and SQLite is intended for local/internship-scale use.
-- Netlify hosts only the static frontend. The FastAPI service requires a separate persistent Python/container host and `NEXT_PUBLIC_API_URL` must point to it.
+- Render free services can sleep after inactivity, and runtime SQLite records are not durable across restarts without persistent storage.
 
 Detailed requirement maps are available in [`docs/milestone-2.md`](docs/milestone-2.md), [`docs/milestone-3.md`](docs/milestone-3.md), and [`docs/milestone-4.md`](docs/milestone-4.md). The final technical narrative is in [`docs/project-report.md`](docs/project-report.md).
 

@@ -31,7 +31,7 @@ Batch submissions reuse the same orchestrator for every item and return individu
 
 ## Deployment note
 
-The Next.js frontend can be hosted on Netlify, but the FastAPI model and local persistence need a separate persistent Python/container host. Production must set Netlify's `NEXT_PUBLIC_API_URL` to that backend's public HTTPS address and redeploy the frontend.
+The complete application is deployed through the root `render.yaml` Blueprint. Render hosts the Next.js static frontend and FastAPI backend as separate connected services, with their public URLs wired through environment variables automatically. Durable production history still requires a persistent disk or external database.
 
 ## Limitations and future hardening
 

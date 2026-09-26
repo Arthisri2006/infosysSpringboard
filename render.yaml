@@ -11,9 +11,10 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.11
       - key: FRONTEND_ORIGIN
-        value: https://aianalysisweb.netlify.app
-      - key: CORS_ORIGIN_REGEX
-        value: https://([a-z0-9-]+--)?aianalysisweb\.netlify\.app
+        fromService:
+          type: web
+          name: evidence-lab
+          envVarKey: RENDER_EXTERNAL_URL
       - key: DATASET_MODE
         value: development
       - key: SQUAD_SAMPLE_SIZE
@@ -24,3 +25,19 @@ services:
         value: "1"
       - key: ANONYMIZED_TELEMETRY
         value: "False"
+
+  - type: web
+    name: evidence-lab
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./out
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: evidence-lab-api
+          envVarKey: RENDER_EXTERNAL_URL
