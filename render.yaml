@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: evidence-lab-api
+    runtime: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python scripts/ingest_datasets.py --reset
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: FRONTEND_ORIGIN
+        value: https://aianalysisweb.netlify.app
+      - key: CORS_ORIGIN_REGEX
+        value: https://([a-z0-9-]+--)?aianalysisweb\.netlify\.app
+      - key: DATASET_MODE
+        value: development
+      - key: SQUAD_SAMPLE_SIZE
+        value: "100"
+      - key: TRUTHFULQA_SAMPLE_SIZE
+        value: "100"
+      - key: HF_HUB_DISABLE_TELEMETRY
+        value: "1"
+      - key: ANONYMIZED_TELEMETRY
+        value: "False"

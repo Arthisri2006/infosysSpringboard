@@ -166,6 +166,18 @@ Python is pinned to 3.11 through `.python-version` and `PYTHON_VERSION` to preve
 
 The FastAPI, Sentence Transformers, and persistent ChromaDB backend is not deployed by Netlify. Deploy the backend to a persistent Python or container host, set `NEXT_PUBLIC_API_URL` in Netlify to that public HTTPS URL, and trigger a new frontend deployment. `http://127.0.0.1:8000` works only for local development and must not be used in production.
 
+### Render Backend Deployment
+
+The root [`render.yaml`](render.yaml) defines a Render FastAPI web service. It installs the backend dependencies, creates a development-size SQuAD/TruthfulQA Chroma index during the build, starts Uvicorn on Render's assigned port, and uses `/health` for deployment health checks.
+
+1. In Render, create a new Blueprint and connect this GitHub repository.
+2. Apply the `render.yaml` Blueprint and wait for the service health check to pass.
+3. Copy the generated HTTPS service URL, such as `https://evidence-lab-api.onrender.com`.
+4. In Netlify, set `NEXT_PUBLIC_API_URL` to that URL without a trailing slash.
+5. Trigger a new Netlify deployment so the public API URL is embedded in the static frontend.
+
+The Blueprint trusts the production Netlify origin and its deploy-preview subdomains. Render's free web service is suitable for demonstration but sleeps after inactivity and uses an ephemeral filesystem; dashboard records can therefore be lost on restart. Use a paid persistent disk or an external database for durable production history.
+
 ## Dataset Ingestion and Vector Index
 
 The single ingestion command downloads both real benchmark datasets, normalizes and chunks them, generates embeddings, and populates Chroma:
@@ -275,6 +287,7 @@ Detailed requirement maps are available in [`docs/milestone-2.md`](docs/mileston
 | `BACKEND_HOST` | `127.0.0.1` | Bind host used by the documented command |
 | `BACKEND_PORT` | `8000` | API port |
 | `FRONTEND_ORIGIN` | `http://localhost:3000` | Allowed browser origin |
+| `CORS_ORIGIN_REGEX` | empty | Optional trusted-origin regex for deployment preview domains |
 | `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:8000` | Browser-visible API base URL |
 | `EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model identifier |
 | `HF_CACHE_DIR` | `./data/cache/huggingface` | Ignored local dataset/model cache |

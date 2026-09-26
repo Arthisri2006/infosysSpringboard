@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     backend_host: str = "127.0.0.1"
     backend_port: int = Field(8000, ge=1, le=65535)
     frontend_origin: str = "http://localhost:3000"
+    cors_origin_regex: str | None = None
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     hf_cache_dir: Path = PROJECT_ROOT / "data" / "cache" / "huggingface"
     chroma_persist_dir: Path = PROJECT_ROOT / "data" / "chroma"
