@@ -1,0 +1,4 @@
+question,ai_response,reference_answer,source_text
+"Who first walked on the Moon?","Neil Armstrong was the first person to walk on the Moon during Apollo 11 in 1969.","Neil Armstrong was the first person to walk on the Moon in 1969.",""
+"What is retrieval-augmented generation?","RAG retrieves relevant documents and supplies them as context before a model generates its response.","Retrieval-augmented generation combines information retrieval with text generation to ground answers in external evidence.",""
+"What is photosynthesis?","Photosynthesis lets plants use light energy to convert carbon dioxide and water into glucose, releasing oxygen.","Photosynthesis uses light energy to convert carbon dioxide and water into glucose and oxygen.",""

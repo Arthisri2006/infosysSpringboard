@@ -72,7 +72,12 @@ class Settings(BaseSettings):
         """Allow both common local frontend hostnames during development."""
         origins = [self.frontend_origin.rstrip("/")]
         if self.frontend_origin in {"http://localhost:3000", "http://127.0.0.1:3000"}:
-            origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+            origins.extend([
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:3001",
+                "http://127.0.0.1:3001",
+            ])
         return list(dict.fromkeys(origins))
 
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-An explainable, multi-agent, RAG-based system for evaluating AI-generated responses. The application prepares provenance-rich evidence, evaluates relevance, accuracy, groundedness/hallucination, and completeness, then produces a transparent weighted verdict. It also supports batch runs, SQLite history, and an aggregate dashboard.
+An explainable, multi-agent, RAG-based system for evaluating AI-generated responses. The application prepares provenance-rich evidence, evaluates relevance, accuracy, groundedness/hallucination, and completeness, produces a transparent weighted verdict, compares stored batches, and exports evidence-rich PDF reports.
 
 ## Problem Statement
 
@@ -10,7 +10,7 @@ LLM responses may sound plausible while being incomplete, irrelevant, or unsuppo
 
 ## Objective
 
-Provide the production-structured foundation from user submission through semantic evidence retrieval, ready for Milestone 2 agents without redesigning the data or RAG layers.
+Provide an end-to-end local evaluation workflow from user submission and RAG evidence through explainable scoring, batch analytics, drill-down, and professional reporting.
 
 ## Features
 
@@ -30,6 +30,10 @@ Provide the production-structured foundation from user submission through semant
 - Claim-level supported, unsupported, and contradicted classifications
 - Configurable weighted verdict with retained component explanations
 - Batch evaluation, SQLite history, and dashboard summaries
+- CSV upload with per-row validation and failure isolation
+- Pass / needs improvement / fail rates, score distributions, recurring issues, and batch trends
+- Filters by outcome, score, batch, and AI system/response source
+- Individual evaluation drill-down and downloadable PDF batch reports
 
 ## Milestone Roadmap
 
@@ -44,6 +48,10 @@ Relevance, accuracy, and hallucination judge agents plus an evaluation orchestra
 ### Milestone 3 — implemented
 
 Completeness and verdict agents, explicit weighted policy, persisted runs, batch evaluation, and analytics dashboard.
+
+### Milestone 4 — implemented
+
+CSV batch ingestion, row-level failure isolation, system comparison metadata, advanced filtered analytics, score distributions, issue and evidence-quality frequencies, per-batch trends, result drill-down, PDF reporting, and final documentation.
 
 ## System Architecture
 
@@ -62,9 +70,11 @@ flowchart LR
   C --> P
   P --> J[Explainable judge agents]
   J --> V[Weighted verdict]
-  V --> S[(SQLite history)]
+  V --> S[(SQLite results)]
   V --> O[Results UI]
-  S --> D[Dashboard]
+  S --> D[Filtered dashboard]
+  S --> B[Batch trends]
+  S --> P[PDF reports]
 ```
 
 The complete future architecture and information flow are in [`docs/architecture.md`](docs/architecture.md). A code-aligned explanation of the current API, ingestion pipeline, evidence selection, retrieval behavior, errors, and verification procedure is in [`docs/backend-working-procedure.md`](docs/backend-working-procedure.md).
@@ -201,11 +211,19 @@ Accepts the same request and returns a complete structured evaluation containing
 
 ### `POST /api/v1/evaluations/batch`
 
-Accepts `{"items": [...]}` and returns every evaluation plus calculated averages and verdict counts.
+Accepts `{"items": [...], "batch_name": "...", "system_name": "..."}`. Valid items continue independently; failures are returned with their row/item number.
+
+### `POST /api/v1/evaluations/batch/csv`
+
+Accepts UTF-8 CSV content with required `question` and `ai_response` columns. Optional `reference_answer` and `source_text` columns are supported. Batch and system labels are query parameters.
 
 ### `GET /api/v1/evaluations/dashboard`
 
-Returns totals, average dimension scores, verdict counts, and recent locally persisted evaluations.
+Returns outcome counts and percentages, averages, score distributions, hallucination and completeness frequencies, recurring issues, batch trends, filter choices, and recent evaluations. Optional filters include outcome/verdict, score range, batch, and system.
+
+### `GET /api/v1/evaluations/reports/batch/{batch_id}.pdf`
+
+Downloads a paginated report generated from the selected batch's stored structured results.
 
 ### `GET /api/v1/evaluations/{evaluation_id}`
 
@@ -248,7 +266,7 @@ Presentation previews and screenshots are generated locally for review before an
 - Batch processing is synchronous and SQLite is intended for local/internship-scale use.
 - Netlify hosts only the static frontend. The FastAPI service requires a separate persistent Python/container host and `NEXT_PUBLIC_API_URL` must point to it.
 
-Detailed requirement maps are available in [`docs/milestone-2.md`](docs/milestone-2.md) and [`docs/milestone-3.md`](docs/milestone-3.md).
+Detailed requirement maps are available in [`docs/milestone-2.md`](docs/milestone-2.md), [`docs/milestone-3.md`](docs/milestone-3.md), and [`docs/milestone-4.md`](docs/milestone-4.md). The final technical narrative is in [`docs/project-report.md`](docs/project-report.md).
 
 ## Configuration
 
@@ -271,15 +289,6 @@ Detailed requirement maps are available in [`docs/milestone-2.md`](docs/mileston
 
 Chunk parameters are starting values, not universally optimal settings. Tune them with measured retrieval experiments.
 
-## Current Limitations
-
-- Benchmark coverage is limited to sampled SQuAD and TruthfulQA in development mode.
-- TruthfulQA evidence consists of benchmark questions and reference answers rather than long source documents.
-- Whitespace-token chunking is model-independent but approximate; it does not use the embedding model's exact tokenizer.
-- Chroma persistence is local and intended for a single-developer Milestone 1 deployment.
-- No PDF upload, authentication, submission history, reranking, or cross-encoder is included.
-- First-time ingestion downloads datasets and a model and may be slow on CPU.
-
 ## Future Work
 
-Intentionally deferred: all LLM judge calls, relevance/accuracy/hallucination/completeness scoring, verdict aggregation, weighting, orchestration, persisted evaluation history, batch workflows, dashboards, and analytics. Their responsibilities are defined in [`docs/architecture.md`](docs/architecture.md), while research background is in [`docs/research.md`](docs/research.md).
+Potential extensions include calibrated LLM judges, human review workflows, background workers for very large batches, authentication, experiment/version tracking, confidence intervals, and production object storage. These are outside the four implemented internship milestones.

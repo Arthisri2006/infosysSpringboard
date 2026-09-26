@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { evaluateResponse } from "@/lib/api";
 import type { EvaluateResponse, EvaluationFormData } from "@/types/evaluation";
 import { EvaluationResults } from "./EvaluationResults";
+import { vibrate } from "./HapticFeedback";
 
 const initial: EvaluationFormData = { question: "", ai_response: "", reference_answer: "", source_text: "" };
 
@@ -25,11 +26,12 @@ export function EvaluationForm() {
     setError("");
     if (!form.question.trim() || !form.ai_response.trim()) {
       setError("Question and AI-generated response are required.");
+      vibrate([28, 35, 28]);
       return;
     }
     setLoading(true);
-    try { setResult(await evaluateResponse(form)); }
-    catch (caught) { setError(caught instanceof Error ? caught.message : "Unexpected request error."); }
+    try { setResult(await evaluateResponse(form)); vibrate([16, 28, 16]); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "Unexpected request error."); vibrate([28, 35, 28]); }
     finally { setLoading(false); }
   }
 
@@ -72,7 +74,7 @@ export function EvaluationForm() {
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-12">
       <aside className="lg:sticky lg:top-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#335cff]">Multi-agent evaluation</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8fa2ff]">Multi-agent evaluation</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-slate-950 sm:text-4xl">
           Evaluate a response against grounded evidence.
         </h1>
@@ -80,7 +82,7 @@ export function EvaluationForm() {
           Five explainable agents assess relevance, accuracy, groundedness, completeness, and the overall verdict.
         </p>
 
-        <ol className="mt-7 grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-0" aria-label="Preparation workflow">
+        <ol className="mt-7 grid grid-cols-1 gap-0 sm:grid-cols-3 sm:gap-2 lg:grid-cols-1 lg:gap-0" aria-label="Preparation workflow">
           {[
             ["01", "Submit", "Question and response"],
             ["02", "Ground", "Retrieve supporting evidence"],
@@ -90,9 +92,9 @@ export function EvaluationForm() {
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-slate-300 bg-white text-[10px] font-bold text-slate-600">{number}</span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-slate-800">{title}</span>
-                <span className="mt-0.5 hidden text-xs text-slate-500 sm:block">{detail}</span>
+                <span className="mt-0.5 block text-xs text-slate-500">{detail}</span>
               </span>
-              {index < 2 && <span className="absolute left-3.5 top-10 hidden h-4 border-l border-slate-300 lg:block" aria-hidden="true" />}
+              {index < 2 && <span className="absolute left-3.5 top-10 h-4 border-l border-slate-300 sm:hidden lg:block" aria-hidden="true" />}
             </li>
           ))}
         </ol>
@@ -128,7 +130,7 @@ export function EvaluationForm() {
           <p className="max-w-md text-xs leading-5 text-slate-500">Your source text is processed temporarily and is not added to the benchmark knowledge base.</p>
           <button
             disabled={loading}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#2447d8] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3cbd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2447d8] disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#5b6ff5] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_28px_rgba(91,111,245,0.28)] transition hover:bg-[#7184ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8fa2ff] disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
           >
             {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />}
             {loading ? "Running evaluation…" : "Evaluate response"}

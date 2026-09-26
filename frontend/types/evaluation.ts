@@ -88,18 +88,69 @@ export interface EvaluationFormData {
 export interface BatchResponse {
   batch_id: string;
   status: "completed";
+  batch_name: string | null;
+  system_name: string | null;
   results: EvaluationResult[];
+  failures: Array<{ row_number: number; error: string; question: string | null }>;
   summary: {
     count: number;
+    failed_count: number;
     average_scores: Record<string, number>;
     verdict_counts: Record<string, number>;
+    outcome_counts: Record<string, number>;
   };
+}
+
+export interface DashboardFilters {
+  verdict?: string;
+  min_score?: number;
+  max_score?: number;
+  batch_id?: string;
+  system_name?: string;
 }
 
 export interface DashboardSummary {
   total_evaluations: number;
   average_scores: Record<string, number>;
   verdict_counts: Record<string, number>;
+  outcomes: {
+    counts: Record<string, number>;
+    percentages: Record<string, number>;
+  };
+  score_distributions: Record<string, Record<string, number>>;
+  hallucination: {
+    responses_with_issues: number;
+    response_rate: number;
+    unsupported_claims: number;
+    contradicted_claims: number;
+    total_claims: number;
+    unsupported_claim_rate: number;
+  };
+  completeness: {
+    responses_with_missing_aspects: number;
+    response_rate: number;
+    total_missing_aspects: number;
+    frequent_missing_aspects: Array<{ aspect: string; count: number }>;
+  };
+  frequent_issues: Array<{ issue: string; count: number }>;
+  batch_trends: Array<{
+    batch_id: string;
+    batch_name: string;
+    system_name: string | null;
+    created_at: string;
+    count: number;
+    average_scores: Record<string, number>;
+    outcome_counts: Record<string, number>;
+  }>;
+  available_batches: Array<{
+    batch_id: string;
+    batch_name: string;
+    system_name: string | null;
+    created_at: string;
+    count: number;
+  }>;
+  available_systems: string[];
+  filters: DashboardFilters;
   recent_evaluations: Array<{
     evaluation_id: string;
     created_at: string;
@@ -111,5 +162,10 @@ export interface DashboardSummary {
     completeness_score: number | null;
     overall_score: number;
     verdict: string;
+    outcome: "pass" | "needs_improvement" | "fail";
+    batch_id: string | null;
+    batch_name: string | null;
+    system_name: string | null;
+    issue_tags: string[];
   }>;
 }

@@ -1,26 +1,16 @@
-from collections import Counter
+from io import BytesIO
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 
-from backend.models.evaluation import (
-    EvaluationInput,
-    PrepareEvaluationRequest,
-    PrepareEvaluationResponse,
-)
+from backend.models.evaluation import EvaluationInput, PrepareEvaluationRequest, PrepareEvaluationResponse
+from backend.models.results import BatchEvaluationRequest, BatchEvaluationResponse, DashboardSummary, EvaluateResponse, EvaluationResult
+from backend.orchestrator.evaluation_orchestrator import get_evaluation_orchestrator, get_evaluation_repository
+from backend.services.analytics_service import AnalyticsService
+from backend.services.batch_service import BatchEvaluationService, parse_csv_records
 from backend.services.evidence_service import get_evidence_service
-from backend.models.results import (
-    BatchEvaluationRequest,
-    BatchEvaluationResponse,
-    BatchSummary,
-    DashboardSummary,
-    EvaluateResponse,
-    EvaluationResult,
-)
-from backend.orchestrator.evaluation_orchestrator import (
-    get_evaluation_orchestrator,
-    get_evaluation_repository,
-)
+from backend.services.report_service import BatchReportService
 
 
 router = APIRouter(prefix="/api/v1/evaluations", tags=["evaluations"])
@@ -48,50 +38,69 @@ def evaluate_response(payload: PrepareEvaluationRequest) -> EvaluateResponse:
 
 @router.post("/batch", response_model=BatchEvaluationResponse)
 def evaluate_batch(payload: BatchEvaluationRequest) -> BatchEvaluationResponse:
-    orchestrator = get_evaluation_orchestrator()
+    service = BatchEvaluationService(get_evaluation_orchestrator(), get_evaluation_repository())
+    return service.evaluate(
+        payload.items, batch_name=payload.batch_name, system_name=payload.system_name
+    )
+
+
+@router.post("/batch/csv", response_model=BatchEvaluationResponse)
+async def evaluate_csv_batch(
+    request: Request,
+    batch_name: str | None = Query(default=None, max_length=120),
+    system_name: str | None = Query(default=None, max_length=120),
+) -> BatchEvaluationResponse:
     try:
-        results = [
-            orchestrator.evaluate(EvaluationInput(**item.model_dump())) for item in payload.items
-        ]
-    except (ValueError, RuntimeError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    dimensions = ("relevance", "accuracy", "groundedness", "completeness", "overall")
-    average_scores = {
-        dimension: round(
-            sum(
-                (
-                    result.relevance.score
-                    if dimension == "relevance"
-                    else result.accuracy.score
-                    if dimension == "accuracy"
-                    else result.hallucination.score
-                    if dimension == "groundedness"
-                    else result.completeness.score
-                    if dimension == "completeness"
-                    else result.verdict.overall_score
-                )
-                or 0.0
-                for result in results
-            )
-            / len(results),
-            2,
-        )
-        for dimension in dimensions
-    }
-    verdict_counts = Counter(result.verdict.verdict for result in results)
-    return BatchEvaluationResponse(
-        results=results,
-        summary=BatchSummary(
-            count=len(results),
-            average_scores=average_scores,
-            verdict_counts=dict(verdict_counts),
-        ),
+        text = (await request.body()).decode("utf-8-sig")
+        items, failures = parse_csv_records(text)
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    service = BatchEvaluationService(get_evaluation_orchestrator(), get_evaluation_repository())
+    return service.evaluate(
+        items,
+        batch_name=batch_name,
+        system_name=system_name,
+        initial_failures=failures,
     )
 
 
 @router.get("/dashboard", response_model=DashboardSummary)
-def dashboard(limit: int = Query(20, ge=1, le=100)) -> DashboardSummary:
-    return get_evaluation_repository().dashboard(limit)
+def dashboard(
+    limit: int = Query(20, ge=1, le=100),
+    verdict: str | None = None,
+    min_score: float | None = Query(default=None, ge=0, le=100),
+    max_score: float | None = Query(default=None, ge=0, le=100),
+    batch_id: UUID | None = None,
+    system_name: str | None = None,
+) -> DashboardSummary:
+    if min_score is not None and max_score is not None and min_score > max_score:
+        raise HTTPException(status_code=422, detail="Minimum score cannot exceed maximum score.")
+    repository = get_evaluation_repository()
+    if not hasattr(repository, "query_rows"):
+        return repository.dashboard(limit)
+    return AnalyticsService(repository).summarize(
+        limit=limit,
+        verdict=verdict,
+        min_score=min_score,
+        max_score=max_score,
+        batch_id=batch_id,
+        system_name=system_name,
+    )
+
+
+@router.get("/reports/batch/{batch_id}.pdf")
+def batch_report(batch_id: UUID) -> StreamingResponse:
+    try:
+        content, filename = BatchReportService(get_evaluation_repository()).create_pdf(batch_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return StreamingResponse(
+        BytesIO(content),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/{evaluation_id}", response_model=EvaluationResult)

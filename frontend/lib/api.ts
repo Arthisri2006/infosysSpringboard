@@ -1,11 +1,13 @@
 import type {
   BatchResponse,
   DashboardSummary,
+  DashboardFilters,
   EvaluateResponse,
   EvaluationFormData,
+  EvaluationResult,
 } from "@/types/evaluation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
@@ -39,14 +41,37 @@ export function evaluateResponse(data: EvaluationFormData): Promise<EvaluateResp
   });
 }
 
-export function evaluateBatch(items: EvaluationFormData[]): Promise<BatchResponse> {
+export function evaluateBatch(items: EvaluationFormData[], batchName?: string, systemName?: string): Promise<BatchResponse> {
   return request("/api/v1/evaluations/batch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items: items.map(payload) }),
+    body: JSON.stringify({ items: items.map(payload), batch_name: batchName || null, system_name: systemName || null }),
   });
 }
 
-export function getDashboard(): Promise<DashboardSummary> {
-  return request("/api/v1/evaluations/dashboard?limit=20");
+export function evaluateCsv(csv: string, batchName: string, systemName: string): Promise<BatchResponse> {
+  const query = new URLSearchParams();
+  if (batchName) query.set("batch_name", batchName);
+  if (systemName) query.set("system_name", systemName);
+  return request(`/api/v1/evaluations/batch/csv?${query.toString()}`, {
+    method: "POST",
+    headers: { "Content-Type": "text/csv" },
+    body: csv,
+  });
+}
+
+export function getDashboard(filters: DashboardFilters = {}): Promise<DashboardSummary> {
+  const query = new URLSearchParams({ limit: "50" });
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") query.set(key, String(value));
+  });
+  return request(`/api/v1/evaluations/dashboard?${query.toString()}`);
+}
+
+export function getEvaluation(id: string): Promise<EvaluationResult> {
+  return request(`/api/v1/evaluations/${id}`);
+}
+
+export function batchReportUrl(batchId: string): string {
+  return `${API_URL}/api/v1/evaluations/reports/batch/${batchId}.pdf`;
 }

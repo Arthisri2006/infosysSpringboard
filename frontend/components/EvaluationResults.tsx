@@ -22,7 +22,7 @@ export function EvaluationResults({ result, onReset }: { result: EvaluateRespons
   return (
     <section>
       <div className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
-        <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#335cff]">Evaluation complete</p><div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2"><h1 className="text-4xl font-semibold tracking-[-0.03em] text-slate-950 sm:text-5xl">{evaluation.verdict.overall_score.toFixed(0)}</h1><p className="pb-1 text-lg font-semibold capitalize text-slate-700">{verdict}</p></div><p className="mt-3 text-[15px] leading-6 text-slate-600">{evaluation.verdict.explanation}</p></div>
+        <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#8fa2ff]">Evaluation complete</p><div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2"><h1 className="text-4xl font-semibold tracking-[-0.03em] text-slate-950 sm:text-5xl">{evaluation.verdict.overall_score.toFixed(0)}</h1><p className="pb-1 text-lg font-semibold capitalize text-slate-700">{verdict}</p></div><p className="mt-3 text-[15px] leading-6 text-slate-600">{evaluation.verdict.explanation}</p></div>
         <button onClick={onReset} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">New evaluation</button>
       </div>
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">

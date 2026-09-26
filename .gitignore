@@ -15,6 +15,9 @@ frontend/.next/
 frontend/out/
 output/
 .codex-pptx/
+.codex-finalizer/
+.chart-data-*/
+tmp/
 docs/presentations/
 data/chroma/
 data/cache/

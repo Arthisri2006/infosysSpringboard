@@ -28,10 +28,13 @@ flowchart TD
     VER --> RES[Structured EvaluationResult]
     RES --> DB[(SQLite history)]
     RES --> UI
-    DB --> DASH[Dashboard and batch summaries]
+    DB --> ANALYTICS[Milestone 4 analytics service]
+    ANALYTICS --> DASH[Filtered scoring dashboard]
+    ANALYTICS --> TREND[Batch and system trends]
+    DB --> PDF[PDF report exporter]
 ```
 
-Milestone 1 provides ingestion, evidence preparation, embeddings, ChromaDB, and retrieval. Milestone 2 adds relevance, claim analysis, accuracy, hallucination, and orchestration. Milestone 3 adds completeness, the weighted verdict, SQLite history, batch evaluation, and the dashboard.
+Milestone 1 provides ingestion, evidence preparation, embeddings, ChromaDB, and retrieval. Milestone 2 adds relevance, claim analysis, accuracy, hallucination, and orchestration. Milestone 3 adds completeness, the weighted verdict, SQLite history, and batch evaluation. Milestone 4 adds failure-isolated CSV batches, analytics, comparison filters, drill-down, and stored-result PDF reports.
 
 ## Information flow
 
@@ -43,18 +46,20 @@ Milestone 1 provides ingestion, evidence preparation, embeddings, ChromaDB, and 
 6. Accuracy summarizes supported versus contradicted claims. Hallucination reports each claim as supported, unsupported, or contradicted and exposes a groundedness score.
 7. Completeness compares evidence-derived required aspects against the response.
 8. The Verdict Agent applies the configured normalized weights and retains all component explanations.
-9. The complete result is returned to the UI and stored in SQLite for history and aggregate dashboard views.
+9. The complete result is returned to the UI and stored in SQLite with optional batch and system provenance.
+10. The analytics service calculates outcome rates, averages, distributions, claim/gap frequencies, recurring issues, and trends from stored results.
+11. The report service reads the same batch records and produces a paginated PDF; it does not rerun evaluation.
 
 ## Component boundaries
 
 - `backend/datasets`: dataset-specific loading into `NormalizedDocument`.
 - `backend/rag`: cleaning, chunking, embeddings, ChromaDB, and retrieval.
-- `backend/services`: evidence selection and `EvidencePackage` construction.
+- `backend/services`: evidence selection, batch isolation, analytics, and PDF reporting.
 - `backend/agents`: independent, explainable dimension evaluators.
 - `backend/orchestrator`: the fixed evaluation workflow.
 - `backend/database`: lightweight local result persistence and summaries.
 - `backend/models`: API, evidence, agent, batch, and dashboard contracts.
-- `frontend`: evaluation, claim inspection, batch submission, and dashboard views.
+- `frontend`: evaluation, CSV/JSON batch submission, filters, analytics, report export, and drill-down.
 
 Embedding and storage behavior are behind adapters, so a different embedding model, vector database, or future LLM-backed judge can replace an implementation without changing the public result model.
 

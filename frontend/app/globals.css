@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --ink: #172033;
-  --muted: #667085;
-  --line: #dfe3ea;
-  --surface: #ffffff;
-  --canvas: #f6f7f9;
-  --accent: #335cff;
+  color-scheme: dark;
+  --ink: #eef2ff;
+  --muted: #94a3b8;
+  --line: #24324a;
+  --surface: #0d1424;
+  --surface-raised: #111b30;
+  --canvas: #070b14;
+  --accent: #7c91ff;
 }
 
 * { box-sizing: border-box; }
@@ -23,14 +24,62 @@ body {
   background: var(--canvas);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
+  background-image:
+    radial-gradient(circle at 10% 0%, rgba(74, 93, 210, 0.16), transparent 34rem),
+    radial-gradient(circle at 90% 22%, rgba(16, 185, 129, 0.07), transparent 30rem);
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
 
-button, textarea, input { font: inherit; }
-button { -webkit-tap-highlight-color: transparent; }
-textarea { scrollbar-color: #c7cdd8 transparent; }
-textarea:focus, input:focus { outline: none; }
+button, textarea, input, select { font: inherit; }
+button, a, label[for] {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+button:not(:disabled):active, a[href]:active, label[for]:active { transform: scale(0.98); }
+textarea { scrollbar-color: #42516d transparent; }
+textarea:focus, input:focus, select:focus { outline: none; }
+textarea, input, select { caret-color: #9aabff; }
+textarea:focus, input:focus, select:focus {
+  border-color: #7c91ff !important;
+  box-shadow: 0 0 0 3px rgba(124, 145, 255, 0.13), 0 10px 28px rgba(0, 0, 0, 0.2);
+}
 
 ::selection {
-  color: #10205e;
-  background: #dce4ff;
+  color: #f8fafc;
+  background: #3f51b5;
+}
+
+/* Central dark palette for the existing Tailwind component system. */
+.bg-white { background-color: rgba(13, 20, 36, 0.94) !important; }
+.bg-white\/90 { background-color: rgba(9, 14, 26, 0.86) !important; }
+.bg-slate-50 { background-color: #101827 !important; }
+.bg-slate-100 { background-color: #172238 !important; }
+.border-slate-100, .border-slate-200, .border-slate-300, .border-slate-400 { border-color: #24324a !important; }
+.text-slate-950, .text-slate-900 { color: #f3f6ff !important; }
+.text-slate-800 { color: #e2e8f0 !important; }
+.text-slate-700 { color: #cbd5e1 !important; }
+.text-slate-600 { color: #a7b2c7 !important; }
+.text-slate-500 { color: #8c9ab2 !important; }
+.text-slate-400 { color: #71809a !important; }
+.hover\:bg-slate-50:hover { background-color: #162138 !important; }
+.hover\:text-slate-800:hover, .hover\:text-slate-900:hover { color: #ffffff !important; }
+.bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+.bg-emerald-100 { background-color: rgba(16, 185, 129, 0.18) !important; }
+.text-emerald-700, .text-emerald-800 { color: #6ee7b7 !important; }
+.border-emerald-200 { border-color: rgba(52, 211, 153, 0.32) !important; }
+.bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+.text-amber-700, .text-amber-800 { color: #fbbf24 !important; }
+.border-amber-200 { border-color: rgba(251, 191, 36, 0.32) !important; }
+.bg-rose-50 { background-color: rgba(244, 63, 94, 0.12) !important; }
+.bg-rose-100 { background-color: rgba(244, 63, 94, 0.18) !important; }
+.text-rose-600, .text-rose-700, .text-rose-800 { color: #fda4af !important; }
+.border-rose-200 { border-color: rgba(251, 113, 133, 0.34) !important; }
+.bg-blue-50 { background-color: rgba(99, 102, 241, 0.14) !important; }
+.text-blue-700 { color: #a5b4fc !important; }
+.shadow-sm, [class*="shadow-"] { --tw-shadow-color: rgba(0, 0, 0, 0.32) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
