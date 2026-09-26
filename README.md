@@ -142,7 +142,9 @@ The root `netlify.toml` deploys the Next.js application from `frontend/` using N
 
 - Base directory: `frontend`
 - Build command: `npm run build`
-- Publish directory: `.next`
+- Publish directory: `out`
+
+The frontend uses Next.js static export mode, so the production build creates `frontend/out/index.html` and deployable assets. This avoids publishing the internal `.next` build directory directly, which can produce a Netlify “Page not found” response when no Next.js runtime adapter is active.
 
 Python is pinned to 3.11 through `.python-version` and `PYTHON_VERSION` to prevent build images from selecting Python 3.14, which can force `pydantic-core` to compile from source. A correct Netlify frontend build does not install `requirements.txt`; the pin is a safe fallback for repository tooling.
 
