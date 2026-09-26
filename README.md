@@ -2,9 +2,7 @@
 
 ## Overview
 
-Milestone 1 of an explainable, multi-agent, RAG-based system for evaluating AI-generated responses. The implemented application accepts a question and AI response, prepares direct or retrieved evidence with provenance, and returns a stable `EvidencePackage` for future judge agents.
-
-This milestone **prepares evidence only**. It does not produce relevance, accuracy, hallucination, completeness, or verdict scores.
+An explainable, multi-agent, RAG-based system for evaluating AI-generated responses. The application prepares provenance-rich evidence, evaluates relevance, accuracy, groundedness/hallucination, and completeness, then produces a transparent weighted verdict. It also supports batch runs, SQLite history, and an aggregate dashboard.
 
 ## Problem Statement
 
@@ -28,6 +26,10 @@ Provide the production-structured foundation from user submission through semant
 - Typed evidence package designed for future judge agents
 - Actual Hit@1, Hit@3, Hit@5, and MRR@5 retrieval measurement
 - Backend tests for validation, normalization, chunking, retrieval, and evidence policy
+- Explainable relevance, accuracy, hallucination, and completeness agents
+- Claim-level supported, unsupported, and contradicted classifications
+- Configurable weighted verdict with retained component explanations
+- Batch evaluation, SQLite history, and dashboard summaries
 
 ## Milestone Roadmap
 
@@ -35,11 +37,11 @@ Provide the production-structured foundation from user submission through semant
 
 Foundation, input UI/API, benchmark knowledge base, RAG retrieval, evidence packaging, retrieval validation, and documentation.
 
-### Milestone 2 — planned, not implemented
+### Milestone 2 — implemented
 
 Relevance, accuracy, and hallucination judge agents plus an evaluation orchestrator and validated structured outputs.
 
-### Milestone 3 — planned, not implemented
+### Milestone 3 — implemented
 
 Completeness and verdict agents, explicit weighted policy, persisted runs, batch evaluation, and analytics dashboard.
 
@@ -58,7 +60,11 @@ flowchart LR
   D --> P[EvidencePackage]
   S --> P
   C --> P
-  P --> J[Judge agents<br/>Future M2/M3]
+  P --> J[Explainable judge agents]
+  J --> V[Weighted verdict]
+  V --> S[(SQLite history)]
+  V --> O[Results UI]
+  S --> D[Dashboard]
 ```
 
 The complete future architecture and information flow are in [`docs/architecture.md`](docs/architecture.md). A code-aligned explanation of the current API, ingestion pipeline, evidence selection, retrieval behavior, errors, and verification procedure is in [`docs/backend-working-procedure.md`](docs/backend-working-procedure.md).
@@ -166,7 +172,7 @@ Omit `--reset` for idempotent upserts into the existing collection. In developme
 2. Start the backend from the repository root.
 3. Start the frontend from `frontend/`.
 4. Submit a question and response. Add a trusted reference and/or source material when available.
-5. Inspect the evidence package. No evaluation verdict is produced in this milestone.
+5. Inspect the verdict, component explanations, claim classifications, missing aspects, and cited evidence. The Batch and Dashboard tabs expose the Milestone 3 flows.
 
 ## API
 
@@ -188,6 +194,22 @@ Request:
 ```
 
 `question` and `ai_response` are required non-blank strings. Optional blank strings normalize to `null`. The response contains status, message, and a provenance-bearing `EvidencePackage`.
+
+### `POST /api/v1/evaluations/evaluate`
+
+Accepts the same request and returns a complete structured evaluation containing the `EvidencePackage`, four dimension results, claim analysis, and weighted verdict.
+
+### `POST /api/v1/evaluations/batch`
+
+Accepts `{"items": [...]}` and returns every evaluation plus calculated averages and verdict counts.
+
+### `GET /api/v1/evaluations/dashboard`
+
+Returns totals, average dimension scores, verdict counts, and recent locally persisted evaluations.
+
+### `GET /api/v1/evaluations/{evaluation_id}`
+
+Returns one saved evaluation or a structured 404 response.
 
 ## RAG Pipeline
 
@@ -213,11 +235,20 @@ Set-Location frontend
 npm run build
 ```
 
-Unit tests isolate external downloads for speed. Real dataset/model/index behavior is verified by the ingestion and retrieval-evaluation commands.
+Unit tests isolate external downloads for speed and cover validation, normalization, chunking, retrieval, agent behavior, compatible/conflicting claim details, verdict aggregation, and persistence. Real dataset/model/index behavior is verified by the ingestion and retrieval-evaluation commands.
 
 ## Screenshots
 
-Screenshots are intentionally not checked in yet. Run the frontend to view the submission and evidence-inspection screens; repository screenshots can be added after the mentor-approved visual review without committing generated build artifacts.
+Presentation previews and screenshots are generated locally for review before any repository push.
+
+## Current Limitations
+
+- The local judge agents use MiniLM similarity and transparent rules, not a paid external LLM or human fact checker.
+- Claim splitting is sentence-level, and contradiction rules are conservative rather than full natural-language inference.
+- Batch processing is synchronous and SQLite is intended for local/internship-scale use.
+- Netlify hosts only the static frontend. The FastAPI service requires a separate persistent Python/container host and `NEXT_PUBLIC_API_URL` must point to it.
+
+Detailed requirement maps are available in [`docs/milestone-2.md`](docs/milestone-2.md) and [`docs/milestone-3.md`](docs/milestone-3.md).
 
 ## Configuration
 

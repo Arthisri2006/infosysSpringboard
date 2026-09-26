@@ -7,9 +7,9 @@ from backend.core.config import get_settings
 
 settings = get_settings()
 app = FastAPI(
-    title="LLM Response Evaluator — Milestone 1",
-    version="1.0.0",
-    description="Prepares grounded evidence packages for future evaluation agents.",
+    title="Explainable Multi-Agent LLM Response Evaluator",
+    version="3.0.0",
+    description="Prepares grounded evidence and returns explainable multi-agent evaluations.",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -23,4 +23,4 @@ app.include_router(evaluation_router)
 
 @app.get("/health", tags=["system"])
 def health() -> dict[str, str]:
-    return {"status": "ok", "milestone": "1"}
+    return {"status": "ok", "milestone": "3"}

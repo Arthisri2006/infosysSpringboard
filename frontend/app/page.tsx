@@ -1,4 +1,4 @@
-import { EvaluationForm } from "@/components/EvaluationForm";
+import { EvaluatorApp } from "@/components/EvaluatorApp";
 
 export default function Home() {
   return (
@@ -14,17 +14,15 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
             <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            Milestone 1
+            Milestones 1–3
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-        <EvaluationForm />
-      </main>
+      <EvaluatorApp />
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-2 px-4 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>Evidence preparation only — no evaluation scores are generated.</p>
-          <p>Explainable Multi-Agent RAG Evaluation</p>
+          <p>Explainable semantic evaluation grounded in retrieved evidence.</p>
+          <p>Milestones 1–3 · Local-first research implementation</p>
         </div>
       </footer>
     </div>

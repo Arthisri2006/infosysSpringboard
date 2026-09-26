@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { prepareEvaluation } from "@/lib/api";
-import type { EvaluationFormData, PrepareResponse } from "@/types/evaluation";
+import { evaluateResponse } from "@/lib/api";
+import type { EvaluateResponse, EvaluationFormData } from "@/types/evaluation";
 import { EvaluationResults } from "./EvaluationResults";
 
 const initial: EvaluationFormData = { question: "", ai_response: "", reference_answer: "", source_text: "" };
@@ -16,7 +16,7 @@ const limits: Record<keyof EvaluationFormData, number> = {
 
 export function EvaluationForm() {
   const [form, setForm] = useState(initial);
-  const [result, setResult] = useState<PrepareResponse | null>(null);
+  const [result, setResult] = useState<EvaluateResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +28,7 @@ export function EvaluationForm() {
       return;
     }
     setLoading(true);
-    try { setResult(await prepareEvaluation(form)); }
+    try { setResult(await evaluateResponse(form)); }
     catch (caught) { setError(caught instanceof Error ? caught.message : "Unexpected request error."); }
     finally { setLoading(false); }
   }
@@ -72,19 +72,19 @@ export function EvaluationForm() {
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-12">
       <aside className="lg:sticky lg:top-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#335cff]">Evidence preparation</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#335cff]">Multi-agent evaluation</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-slate-950 sm:text-4xl">
-          Start with a response. Build the evidence around it.
+          Evaluate a response against grounded evidence.
         </h1>
         <p className="mt-4 text-[15px] leading-7 text-slate-600">
-          Submit a question and its AI-generated answer. We will organize trusted references and retrieve relevant benchmark evidence for later evaluation.
+          Five explainable agents assess relevance, accuracy, groundedness, completeness, and the overall verdict.
         </p>
 
         <ol className="mt-7 grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-0" aria-label="Preparation workflow">
           {[
             ["01", "Submit", "Question and response"],
-            ["02", "Retrieve", "Reference evidence"],
-            ["03", "Review", "Inspect provenance"],
+            ["02", "Ground", "Retrieve supporting evidence"],
+            ["03", "Evaluate", "Review scores and claims"],
           ].map(([number, title, detail], index) => (
             <li key={number} className="relative flex min-w-0 gap-3 py-3 lg:py-3.5">
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-slate-300 bg-white text-[10px] font-bold text-slate-600">{number}</span>
@@ -131,7 +131,7 @@ export function EvaluationForm() {
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#2447d8] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3cbd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2447d8] disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
           >
             {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />}
-            {loading ? "Preparing evidence…" : "Prepare evidence"}
+            {loading ? "Running evaluation…" : "Evaluate response"}
           </button>
         </div>
       </form>

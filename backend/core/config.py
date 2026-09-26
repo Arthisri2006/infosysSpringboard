@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     dataset_mode: Literal["development", "full"] = "development"
     squad_sample_size: int = Field(250, ge=1)
     truthfulqa_sample_size: int = Field(250, ge=1)
+    database_path: Path = PROJECT_ROOT / "data" / "evaluations.db"
+    support_threshold: float = Field(0.62, ge=0.0, le=1.0)
+    contradiction_threshold: float = Field(0.55, ge=0.0, le=1.0)
+    completeness_threshold: float = Field(0.60, ge=0.0, le=1.0)
+    relevance_weight: float = Field(0.20, ge=0.0)
+    accuracy_weight: float = Field(0.35, ge=0.0)
+    groundedness_weight: float = Field(0.25, ge=0.0)
+    completeness_weight: float = Field(0.20, ge=0.0)
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
@@ -35,11 +43,29 @@ class Settings(BaseSettings):
     def validate_chunking(self) -> "Settings":
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("CHUNK_OVERLAP must be smaller than CHUNK_SIZE")
-        for field_name in ("hf_cache_dir", "chroma_persist_dir"):
+        for field_name in ("hf_cache_dir", "chroma_persist_dir", "database_path"):
             path = getattr(self, field_name)
             if not path.is_absolute():
                 setattr(self, field_name, (PROJECT_ROOT / path).resolve())
+        if not any(
+            (
+                self.relevance_weight,
+                self.accuracy_weight,
+                self.groundedness_weight,
+                self.completeness_weight,
+            )
+        ):
+            raise ValueError("At least one verdict weight must be positive")
         return self
+
+    @property
+    def verdict_weights(self) -> dict[str, float]:
+        return {
+            "relevance": self.relevance_weight,
+            "accuracy": self.accuracy_weight,
+            "groundedness": self.groundedness_weight,
+            "completeness": self.completeness_weight,
+        }
 
     @property
     def cors_origins(self) -> list[str]:

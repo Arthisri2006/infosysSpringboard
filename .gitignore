@@ -14,8 +14,12 @@ node_modules/
 frontend/.next/
 frontend/out/
 output/
+.codex-pptx/
+docs/presentations/
 data/chroma/
 data/cache/
 data/retrieval-evaluation.*
+data/*.db
+data/*.db-*
 *.log
 .DS_Store

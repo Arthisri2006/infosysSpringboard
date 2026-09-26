@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Evidence Lab | LLM Response Evaluator",
-  description: "Prepare grounded evidence for explainable LLM response evaluation.",
+  description: "Evaluate AI responses with grounded evidence and explainable agents.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -13,4 +13,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-

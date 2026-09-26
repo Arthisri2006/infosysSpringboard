@@ -1,69 +1,73 @@
 # System Architecture
 
-## Complete roadmap architecture
+## Implemented architecture
 
 ```mermaid
 flowchart TD
-    U[User] --> UI[Evaluation Input Interface]
-    UI --> API[Backend / API Layer]
-    API --> SUB[Evaluation Submission & Input Processing]
-    SUB --> ORCH[Evaluation Orchestrator<br/>Future — Milestone 2/3]
-    ORCH --> EM[Reference / Evidence Manager]
-    EM --> RAG[Reference Knowledge Base / RAG]
-    RAG --> EMB[Sentence Transformer Embeddings]
+    U[User] --> UI[Next.js evaluation interface]
+    UI --> API[FastAPI validation]
+    API --> ORCH[Evaluation Orchestrator]
+    ORCH --> EM[Evidence Service]
+    EM --> REF[Direct reference]
+    EM --> SRC[Temporary source ranking]
+    EM --> RAG[Benchmark retrieval]
+    RAG --> EMB[MiniLM embeddings]
     EMB --> VDB[(ChromaDB)]
-    VDB --> EM
-    EM --> PKG[EvidencePackage]
-    PKG --> REL[Relevance Judge Agent<br/>Future — Milestone 2]
-    PKG --> ACC[Accuracy Judge Agent<br/>Future — Milestone 2]
-    PKG --> HAL[Hallucination Detection Agent<br/>Future — Milestone 2]
-    PKG --> COM[Completeness Judge Agent<br/>Future — Milestone 3]
-    REL --> VER[Verdict Agent<br/>Future — Milestone 3]
+    REF --> PKG[EvidencePackage]
+    SRC --> PKG
+    VDB --> PKG
+    PKG --> REL[Relevance Judge]
+    PKG --> CLAIM[Claim Analyzer]
+    CLAIM --> ACC[Accuracy Judge]
+    CLAIM --> HAL[Hallucination Judge]
+    PKG --> COM[Completeness Judge]
+    REL --> VER[Verdict Agent]
     ACC --> VER
     HAL --> VER
     COM --> VER
-    VER --> RESULT[Structured Results<br/>Future — Milestone 2/3]
-    RESULT --> DASH[Dashboard / Batch Analytics<br/>Future — Milestone 3]
-
-    classDef future fill:#2d2440,stroke:#a78bfa,color:#fff,stroke-dasharray: 5 5;
-    class ORCH,REL,ACC,HAL,COM,VER,RESULT,DASH future;
+    VER --> RES[Structured EvaluationResult]
+    RES --> DB[(SQLite history)]
+    RES --> UI
+    DB --> DASH[Dashboard and batch summaries]
 ```
 
-Only the input, validation, evidence manager, dataset ingestion, embedding, vector storage, retrieval, and `EvidencePackage` portions are implemented in Milestone 1.
+Milestone 1 provides ingestion, evidence preparation, embeddings, ChromaDB, and retrieval. Milestone 2 adds relevance, claim analysis, accuracy, hallucination, and orchestration. Milestone 3 adds completeness, the weighted verdict, SQLite history, batch evaluation, and the dashboard.
 
-## Milestone 1 runtime flow
+## Information flow
 
-1. The browser validates required fields and posts JSON to `/api/v1/evaluations/prepare`.
-2. Pydantic trims text, converts blank optional fields to `null`, and rejects malformed input.
-3. The evidence service creates an immutable evaluation identifier.
-4. A reference answer is preserved directly. Submitted source text is cleaned, chunked, embedded, and ranked in memory. If neither is present, the benchmark collection is searched.
-5. Chroma returns cosine distances. The vector adapter exposes the original distance and the documented transformation `similarity = 1 - cosine_distance`; it never invents a score.
-6. The API returns one typed `EvidencePackage`, which the UI displays without claiming that evaluation has happened.
+1. The browser validates the question and AI response and submits JSON.
+2. Pydantic trims input, converts blank optional fields to `null`, and rejects invalid payloads.
+3. The Evidence Service preserves a direct reference, ranks supplied source text temporarily, or searches the benchmark index when no direct evidence exists.
+4. Every judge consumes the same provenance-bearing `EvidencePackage`.
+5. The Relevance Judge compares the question and response. The Claim Analyzer splits the response into factual units and finds the closest evidence for each.
+6. Accuracy summarizes supported versus contradicted claims. Hallucination reports each claim as supported, unsupported, or contradicted and exposes a groundedness score.
+7. Completeness compares evidence-derived required aspects against the response.
+8. The Verdict Agent applies the configured normalized weights and retains all component explanations.
+9. The complete result is returned to the UI and stored in SQLite for history and aggregate dashboard views.
 
 ## Component boundaries
 
-- `backend/datasets`: dataset-specific loading and conversion to `NormalizedDocument`.
-- `backend/rag`: dataset-agnostic cleaning, chunking, embedding, persistence, and retrieval.
-- `backend/services`: evidence policy and package assembly.
-- `backend/models`: stable contracts shared by the API and future agents.
-- `frontend`: typed submission and evidence inspection UI.
-- `scripts`: repeatable ingestion and measured retrieval validation.
+- `backend/datasets`: dataset-specific loading into `NormalizedDocument`.
+- `backend/rag`: cleaning, chunking, embeddings, ChromaDB, and retrieval.
+- `backend/services`: evidence selection and `EvidencePackage` construction.
+- `backend/agents`: independent, explainable dimension evaluators.
+- `backend/orchestrator`: the fixed evaluation workflow.
+- `backend/database`: lightweight local result persistence and summaries.
+- `backend/models`: API, evidence, agent, batch, and dashboard contracts.
+- `frontend`: evaluation, claim inspection, batch submission, and dashboard views.
 
-Embedding and vector-store operations sit behind small interfaces/adapters. A future model or database can replace them without changing API schemas or judge inputs.
+Embedding and storage behavior are behind adapters, so a different embedding model, vector database, or future LLM-backed judge can replace an implementation without changing the public result model.
 
-## Future agent contracts (not implemented)
+## Judge responsibilities
 
-Each judge will consume an `EvidencePackage` plus a dimension-specific rubric and return a structured result containing a score/label, rationale, cited chunk IDs, confidence, and insufficiency warnings.
+- **Relevance Judge:** measures whether the response addresses the question.
+- **Accuracy Judge:** summarizes claim support against direct or retrieved evidence.
+- **Hallucination Detection Agent:** exposes each factual claim and its supported, unsupported, or contradicted status.
+- **Completeness Judge:** reports covered and missing evidence-derived aspects.
+- **Verdict Agent:** combines available scores using explicit configurable weights: relevance 20%, accuracy 35%, groundedness 25%, and completeness 20% by default.
 
-- **Relevance Judge:** determine whether the response directly addresses the submitted question. It primarily compares question and response.
-- **Accuracy Judge:** compare factual claims with the provided reference answer and/or retrieved evidence, while preserving conflicts and provenance.
-- **Hallucination Detection Agent:** extract atomic factual claims and label each `supported`, `unsupported`, or `contradicted`, with cited evidence.
-- **Completeness Judge:** identify requested/expected aspects and determine which are covered or missing.
-- **Verdict Agent:** aggregate validated dimension results under an explicit, versioned policy. It must not erase lower-level explanations.
-
-Future files can be added under `backend/agents/` and `backend/orchestrator/` without restructuring the RAG foundation.
+The current judges are deterministic and local. They use sentence-transformer similarity plus transparent conflict rules; they do not call a paid external LLM and do not claim human-level fact checking.
 
 ## Failure behavior
 
-Invalid requests return FastAPI's structured 422 response. Model/database startup failures return a sanitized 503 detail. An empty benchmark index produces a successful evidence package with an explicit warning and `evidence_source_type: none`, allowing the UI to explain the remediation instead of fabricating evidence.
-
+Invalid requests return a structured 422 response. Model, database, or retrieval failures return a sanitized service error. If no evidence is available, claim-level results explicitly remain unsupported rather than inventing facts. Empty benchmark retrieval produces a warning that explains how to build the index.
