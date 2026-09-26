@@ -61,7 +61,7 @@ flowchart LR
   P --> J[Judge agents<br/>Future M2/M3]
 ```
 
-The complete future architecture and information flow are in [`docs/architecture.md`](docs/architecture.md).
+The complete future architecture and information flow are in [`docs/architecture.md`](docs/architecture.md). A code-aligned explanation of the current API, ingestion pipeline, evidence selection, retrieval behavior, errors, and verification procedure is in [`docs/backend-working-procedure.md`](docs/backend-working-procedure.md).
 
 ## Tech Stack
 
@@ -135,6 +135,18 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Netlify Deployment
+
+The root `netlify.toml` deploys the Next.js application from `frontend/` using Node.js 22. When the GitHub repository is linked, the file supplies these settings:
+
+- Base directory: `frontend`
+- Build command: `npm run build`
+- Publish directory: `.next`
+
+Python is pinned to 3.11 through `.python-version` and `PYTHON_VERSION` to prevent build images from selecting Python 3.14, which can force `pydantic-core` to compile from source. A correct Netlify frontend build does not install `requirements.txt`; the pin is a safe fallback for repository tooling.
+
+The FastAPI, Sentence Transformers, and persistent ChromaDB backend is not deployed by Netlify. Deploy the backend to a persistent Python or container host, set `NEXT_PUBLIC_API_URL` in Netlify to that public HTTPS URL, and trigger a new frontend deployment. `http://127.0.0.1:8000` works only for local development and must not be used in production.
 
 ## Dataset Ingestion and Vector Index
 

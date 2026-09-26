@@ -1,0 +1,12 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PYTHON_VERSION = "3.11"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# Configure NEXT_PUBLIC_API_URL in Netlify after deploying the FastAPI backend
+# to a persistent Python host. A localhost URL cannot work from a public site.

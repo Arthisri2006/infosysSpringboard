@@ -13,6 +13,7 @@ node_modules/
 .env.*.local
 frontend/.next/
 frontend/out/
+output/
 data/chroma/
 data/cache/
 data/retrieval-evaluation.*
