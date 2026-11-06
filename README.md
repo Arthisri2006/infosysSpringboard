@@ -163,21 +163,19 @@ The root `netlify.toml` builds the static Next.js frontend from `frontend/` and 
 
 The Python backend, MiniLM model, Chroma index, and SQLite history require a separate backend host. A frontend deployment alone does not deploy the evaluation service. Do not use a localhost API URL for a public deployment.
 
-## Render Deployment
+## Render Backend Deployment
 
-The root [`render.yaml`](render.yaml) deploys the complete application on Render as two connected services:
+The root [`render.yaml`](render.yaml) defines the `evidence-lab-api` FastAPI service. The frontend is hosted separately at `https://arthisri-evidence-lab.netlify.app`.
 
-- `evidence-lab-api`: a FastAPI web service that installs the RAG dependencies, builds a development-size SQuAD/TruthfulQA Chroma index, starts Uvicorn, and exposes `/health`.
-- `evidence-lab`: a Next.js static site built from `frontend/` and published from `frontend/out`.
+1. Create a Render Blueprint from this GitHub repository and apply `render.yaml`.
+2. Wait for the build, benchmark ingestion, and `/health` check to succeed.
+3. Copy the assigned backend HTTPS URL into Netlify's `NEXT_PUBLIC_API_URL` environment variable.
+4. Rebuild and deploy the frontend; this variable is embedded at build time.
+5. Verify a real evaluation, dashboard, and batch report through the deployed application.
 
-The Blueprint wires the generated service URLs automatically. `NEXT_PUBLIC_API_URL` points the frontend to the backend, while `FRONTEND_ORIGIN` permits browser requests from the Render frontend. No manual production URL is required.
+The backend allows the Netlify origin through `FRONTEND_ORIGIN`. Its build installs CPU-only PyTorch before the RAG dependencies, then creates the development-size benchmark index. Python is pinned to 3.11.
 
-1. In Render, create a new Blueprint from this GitHub repository.
-2. Apply the `render.yaml` Blueprint.
-3. Wait for both services to finish building and for the API health check to pass.
-4. Open the `evidence-lab` static-site URL.
-
-Python is pinned to 3.11 to ensure binary wheels are available for the backend dependencies. The frontend uses Next.js static export mode. Render's free web service is suitable for demonstration but sleeps after inactivity and uses an ephemeral filesystem; dashboard records can therefore be lost on restart. Use a paid persistent disk or an external database for durable production history.
+The configured free service can sleep after inactivity and has ephemeral storage. SQLite history can be lost on restarts. Larger memory requirements may require a different instance size; durable history requires a persistent disk or external database.
 
 ## Dataset Ingestion and Vector Index
 
