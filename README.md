@@ -163,19 +163,16 @@ The root `netlify.toml` builds the static Next.js frontend from `frontend/` and 
 
 The Python backend, MiniLM model, Chroma index, and SQLite history require a separate backend host. A frontend deployment alone does not deploy the evaluation service. Do not use a localhost API URL for a public deployment.
 
-## Render Backend Deployment
+## Render Full-Stack Deployment
 
-The root [`render.yaml`](render.yaml) defines the `evidence-lab-api` FastAPI service. The frontend is hosted separately at `https://arthisri-evidence-lab.netlify.app`.
+The root [`render.yaml`](render.yaml) defines two connected Render services:
 
-1. Create a Render Blueprint from this GitHub repository and apply `render.yaml`.
-2. Wait for the build, benchmark ingestion, and `/health` check to succeed.
-3. Copy the assigned backend HTTPS URL into Netlify's `NEXT_PUBLIC_API_URL` environment variable.
-4. Rebuild and deploy the frontend; this variable is embedded at build time.
-5. Verify a real evaluation, dashboard, and batch report through the deployed application.
+- `evidence-lab-api`: the Python FastAPI evaluation backend, with MiniLM and Chroma benchmark evidence.
+- `evidence-lab`: the static Next.js frontend built from `frontend/` and published from `frontend/out/`.
 
-The backend allows the Netlify origin through `FRONTEND_ORIGIN`. Its build installs CPU-only PyTorch before the RAG dependencies, then creates the development-size benchmark index. Python is pinned to 3.11.
+Create or sync a Render Blueprint from this repository. The Blueprint sets `NEXT_PUBLIC_API_URL` to the backend HTTPS URL and `FRONTEND_ORIGIN` to the frontend origin automatically. Wait for both services to deploy, then verify `/health` and submit an evaluation through the frontend. Netlify is an optional alternative frontend host, not required for this setup.
 
-The configured free service can sleep after inactivity and has ephemeral storage. SQLite history can be lost on restarts. Larger memory requirements may require a different instance size; durable history requires a persistent disk or external database.
+The free backend can sleep after inactivity and has ephemeral storage. SQLite history can be lost on restarts; durable history requires a persistent disk or external database.
 
 ## Dataset Ingestion and Vector Index
 
