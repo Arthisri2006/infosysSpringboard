@@ -1,0 +1,11 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+# Set NEXT_PUBLIC_API_URL to the public FastAPI backend URL before building.
+# The Python/MiniLM/Chroma service runs on a separate backend host.

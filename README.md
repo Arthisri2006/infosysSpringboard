@@ -152,6 +152,17 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Netlify Frontend Deployment
+
+The root `netlify.toml` builds the static Next.js frontend from `frontend/` and publishes `frontend/out/`.
+
+1. Import this repository into Netlify.
+2. Set `NEXT_PUBLIC_API_URL` to the public HTTPS URL of the FastAPI backend before building.
+3. Set `FRONTEND_ORIGIN` on the backend to the Netlify site's origin.
+4. Deploy and verify both the frontend and an evaluation request.
+
+The Python backend, MiniLM model, Chroma index, and SQLite history require a separate backend host. A frontend deployment alone does not deploy the evaluation service. Do not use a localhost API URL for a public deployment.
+
 ## Render Deployment
 
 The root [`render.yaml`](render.yaml) deploys the complete application on Render as two connected services:

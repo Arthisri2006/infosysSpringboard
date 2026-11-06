@@ -13,8 +13,11 @@ node_modules/
 .env.*.local
 frontend/.next/
 frontend/out/
+.netlify/
+frontend/.netlify/
 output/
 .codex-pptx/
+.codex-video/
 .codex-finalizer/
 .chart-data-*/
 tmp/
