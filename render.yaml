@@ -3,7 +3,7 @@ services:
     name: evidence-lab-api
     runtime: python
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python scripts/ingest_datasets.py --reset
+    buildCommand: pip install --upgrade pip && pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt && python scripts/ingest_datasets.py --reset
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeploy: true
@@ -25,6 +25,10 @@ services:
         value: "1"
       - key: ANONYMIZED_TELEMETRY
         value: "False"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
 
   - type: web
     name: evidence-lab
