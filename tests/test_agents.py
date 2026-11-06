@@ -67,6 +67,20 @@ def test_more_precise_evidence_number_is_not_a_conflict() -> None:
     assert claims[0].status == "supported"
 
 
+def test_sentence_initial_capitalization_is_not_a_name_conflict() -> None:
+    class AlignedEmbeddings:
+        def embed_documents(self, texts):
+            return [[1.0, 0.0] for _ in texts]
+
+    evidence = package("Seasons occur because Earth's axis is tilted as it orbits the Sun.")
+    evidence.reference_answer = (
+        "Earth's axial tilt causes seasons. As Earth orbits the Sun, each hemisphere "
+        "receives different angles and durations of sunlight."
+    )
+    claims = ClaimAnalyzer(SemanticAnalyzer(AlignedEmbeddings()), 0.6, 0.5).analyze(evidence)
+    assert claims[0].status == "supported"
+
+
 def test_completeness_and_verdict_use_normalized_scores() -> None:
     analyzer = SemanticAnalyzer(BagEmbeddings())
     evidence = package("Neil Armstrong walked on the Moon in 1969.")

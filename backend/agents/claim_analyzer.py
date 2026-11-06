@@ -1,3 +1,5 @@
+import re
+
 from backend.agents.semantic import (
     SemanticAnalyzer,
     has_negation,
@@ -57,7 +59,10 @@ class ClaimAnalyzer:
             negation_conflict = has_negation(claim) != has_negation(best.text)
             claim_names = named_terms(claim)
             evidence_names = named_terms(best.text)
-            name_conflict = bool(claim_names and evidence_names and not claim_names.issubset(evidence_names))
+            # Sentence-initial capitalization is not a different entity:
+            # "Seasons" can match "seasons" anywhere in the reference.
+            evidence_words = set(re.findall(r"\b\w+\b", best.text.casefold()))
+            name_conflict = bool(claim_names and evidence_names and not claim_names.issubset(evidence_words))
             contradicted = similarity >= self.contradiction_threshold and (
                 number_conflict or negation_conflict or name_conflict
             )
