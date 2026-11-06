@@ -1,5 +1,18 @@
 # LLM Response Evaluation System
 
+**Live application:** [Evidence Lab on Render](https://evidence-lab.onrender.com) · **Repository:** [Arthisri2006/infosysSpringboard](https://github.com/Arthisri2006/infosysSpringboard) · **License:** [MIT](LICENSE)
+
+## Agile Documentation
+
+The [Agile delivery guide](docs/agile/README.md) documents the product backlog, user stories with acceptance criteria, four milestone-based sprint increments, retrospective observations, and the definition of done.
+
+- [Product backlog](docs/agile/product-backlog.md)
+- [User stories and acceptance criteria](docs/agile/user-stories.md)
+- [Sprint plan and delivery record](docs/agile/sprint-plan.md)
+- [Retrospectives and improvement actions](docs/agile/retrospectives.md)
+
+Historical sprint groupings are reconstructed from implementation evidence; proposed work and unrecorded ceremonies are not presented as completed history.
+
 ## Overview
 
 An explainable, multi-agent, RAG-based system for evaluating AI-generated responses. The application prepares provenance-rich evidence, evaluates relevance, accuracy, groundedness/hallucination, and completeness, produces a transparent weighted verdict, compares stored batches, and exports evidence-rich PDF reports.
@@ -301,3 +314,7 @@ Chunk parameters are starting values, not universally optimal settings. Tune the
 ## Future Work
 
 Potential extensions include calibrated LLM judges, human review workflows, background workers for very large batches, authentication, experiment/version tracking, confidence intervals, and production object storage. These are outside the four implemented internship milestones.
+
+## License
+
+The project's original source code and documentation are distributed under the [MIT License](LICENSE). Third-party packages, pretrained models, and datasets retain their respective licenses.

@@ -24,5 +24,5 @@
 
 ## Scope guard
 
-No judge LLM calls, dimension scores, weighted verdicts, batch evaluation orchestration, or analytics dashboard are implemented. Future components are documented only.
+At the Milestone 1 checkpoint, judge LLM calls, dimension scores, weighted verdicts, batch orchestration, and analytics were outside this increment. Later milestones added the local evaluation agents, scores, verdict, batch processing, and dashboard; see the current README and Milestone 2–4 documents.
 
